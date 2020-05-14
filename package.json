@@ -1,6 +1,6 @@
 {
-  "name": "quill-delta",
-  "version": "4.2.2",
+  "name": "@reedsy/quill-delta",
+  "version": "4.2.2-reedsy.1.0.0",
   "description": "Format for representing rich text documents and changes.",
   "author": "Jason Chen <jhchen7@gmail.com>",
   "homepage": "https://github.com/quilljs/delta",
@@ -67,10 +67,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/quilljs/delta"
-  },
-  "bugs": {
-    "url": "https://github.com/quilljs/delta/issues"
+    "url": "git://github.com/reedsy/delta.git"
   },
   "keywords": [
     "rich text",
