@@ -1,8 +1,12 @@
-import equal from 'deep-equal';
-import extend from 'extend';
+import cloneDeep from 'lodash.clonedeep';
+import isEqual from 'lodash.isequal';
 
 interface AttributeMap {
   [key: string]: any;
+}
+
+function isObject(value: any): boolean {
+  return value === Object(value) && !Array.isArray(value);
 }
 
 namespace AttributeMap {
@@ -17,14 +21,10 @@ namespace AttributeMap {
     if (typeof b !== 'object') {
       b = {};
     }
-    let attributes = extend(true, {}, b);
+    let attributes = cloneDeep(b);
     for (const key in a) {
       if (isObject(a[key]) && isObject(attributes[key])) {
-        attributes[key] = compose(
-          a[key],
-          attributes[key],
-          keepNull,
-        );
+        attributes[key] = compose(a[key], attributes[key], keepNull);
       }
     }
     if (!keepNull) {
@@ -56,7 +56,7 @@ namespace AttributeMap {
     const attributes = Object.keys(a)
       .concat(Object.keys(b))
       .reduce<AttributeMap>((attrs, key) => {
-        if (!equal(a[key], b[key])) {
+        if (!isEqual(a[key], b[key])) {
           if (b[key] === undefined) {
             attrs[key] = null;
           } else if (isObject(a[key]) && isObject(b[key])) {
@@ -70,10 +70,13 @@ namespace AttributeMap {
     return Object.keys(attributes).length > 0 ? attributes : undefined;
   }
 
-  export function invert(attr: AttributeMap = {}, base: AttributeMap = {}) {
+  export function invert(
+    attr: AttributeMap = {},
+    base: AttributeMap = {},
+  ): AttributeMap {
     attr = attr || {};
     const baseInverted = Object.keys(base).reduce<AttributeMap>((memo, key) => {
-      if (!equal(base[key], attr[key]) && attr[key] !== undefined) {
+      if (!isEqual(base[key], attr[key]) && attr[key] !== undefined) {
         if (isObject(attr[key]) && isObject(base[key])) {
           memo[key] = invert(attr[key], base[key]);
         } else {
@@ -93,7 +96,7 @@ namespace AttributeMap {
   export function transform(
     a: AttributeMap | undefined,
     b: AttributeMap | undefined,
-    priority: boolean = false,
+    priority = false,
   ): AttributeMap | undefined {
     if (typeof a !== 'object') {
       return b;
@@ -114,10 +117,6 @@ namespace AttributeMap {
     }, {});
     return Object.keys(attributes).length > 0 ? attributes : undefined;
   }
-}
-
-function isObject(value: any): boolean {
-  return value === Object(value) && !Array.isArray(value);
 }
 
 export default AttributeMap;
