@@ -9,6 +9,15 @@ function isObject(value: any): boolean {
   return value === Object(value) && !Array.isArray(value);
 }
 
+function isDeepNull(value: any): boolean {
+  if (value == null) return true;
+  if (!isObject(value)) return false;
+  for (const key in value) {
+    if (!isDeepNull(value[key])) return false;
+  }
+  return true;
+}
+
 namespace AttributeMap {
   export function compose(
     a: AttributeMap = {},
@@ -29,7 +38,7 @@ namespace AttributeMap {
     }
     if (!keepNull) {
       attributes = Object.keys(attributes).reduce<AttributeMap>((copy, key) => {
-        if (attributes[key] != null) {
+        if (!isDeepNull(attributes[key])) {
           copy[key] = attributes[key];
         }
         return copy;
