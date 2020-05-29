@@ -1,6 +1,6 @@
 {
   "name": "@reedsy/quill-delta",
-  "version": "4.2.2-reedsy.1.0.0",
+  "version": "4.2.2-reedsy.1.0.1",
   "description": "Format for representing rich text documents and changes.",
   "author": "Jason Chen <jhchen7@gmail.com>",
   "homepage": "https://github.com/quilljs/delta",

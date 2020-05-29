@@ -140,6 +140,15 @@ describe('AttributeMap', function() {
         ).toEqual({complex: {foo: [1, 3]}});
       });
 
+      it('ignores null leaves on new attributes', function() {
+        expect(
+          AttributeMap.compose(
+            undefined,
+            {complex: {foo: null, bar: null}},
+          ),
+        ).toBeUndefined();
+      });
+
       it('deep mix of operations', function() {
         expect(
           AttributeMap.compose(
