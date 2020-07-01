@@ -1,8 +1,9 @@
 import diff from 'fast-diff';
-import cloneDeep from 'lodash.clonedeep';
-import isEqual from 'lodash.isequal';
+import rfdc from 'rfdc';
+import isEqual from 'fast-deep-equal';
 import AttributeMap from './AttributeMap';
 import Op from './Op';
+const cloneDeep = rfdc();
 
 const NULL_CHARACTER = String.fromCharCode(0); // Placeholder char for embed in diff()
 
