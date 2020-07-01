@@ -1,5 +1,6 @@
-import cloneDeep from 'lodash.clonedeep';
-import isEqual from 'lodash.isequal';
+import rfdc from 'rfdc';
+import isEqual from 'fast-deep-equal';
+const cloneDeep = rfdc();
 
 interface AttributeMap {
   [key: string]: any;
