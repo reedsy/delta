@@ -3,7 +3,7 @@ import isEqual from 'fast-deep-equal';
 const cloneDeep = rfdc();
 
 interface AttributeMap {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 function isObject(value: any): boolean {

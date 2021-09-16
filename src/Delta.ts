@@ -3,12 +3,14 @@ import rfdc from 'rfdc';
 import isEqual from 'fast-deep-equal';
 import AttributeMap from './AttributeMap';
 import Op from './Op';
+import OpIterator from './OpIterator';
 const cloneDeep = rfdc();
 
 const NULL_CHARACTER = String.fromCharCode(0); // Placeholder char for embed in diff()
 
 class Delta {
   static Op = Op;
+  static OpIterator = OpIterator;
   static AttributeMap = AttributeMap;
 
   ops: Op[];
@@ -23,7 +25,10 @@ class Delta {
     }
   }
 
-  insert(arg: string | object, attributes?: AttributeMap): this {
+  insert(
+    arg: string | Record<string, unknown>,
+    attributes?: AttributeMap,
+  ): this {
     const newOp: Op = {};
     if (typeof arg === 'string' && arg.length === 0) {
       return this;
@@ -169,7 +174,7 @@ class Delta {
 
   slice(start = 0, end = Infinity): Delta {
     const ops = [];
-    const iter = Op.iterator(this.ops);
+    const iter = new OpIterator(this.ops);
     let index = 0;
     while (index < end && iter.hasNext()) {
       let nextOp;
@@ -185,8 +190,8 @@ class Delta {
   }
 
   compose(other: Delta): Delta {
-    const thisIter = Op.iterator(this.ops);
-    const otherIter = Op.iterator(other.ops);
+    const thisIter = new OpIterator(this.ops);
+    const otherIter = new OpIterator(other.ops);
     const ops = [];
     const firstOther = otherIter.peek();
     if (
@@ -282,8 +287,8 @@ class Delta {
     });
     const retDelta = new Delta();
     const diffResult = diff(strings[0], strings[1], cursor);
-    const thisIter = Op.iterator(this.ops);
-    const otherIter = Op.iterator(other.ops);
+    const thisIter = new OpIterator(this.ops);
+    const otherIter = new OpIterator(other.ops);
     diffResult.forEach((component: diff.Diff) => {
       let length = component[1].length;
       while (length > 0) {
@@ -330,7 +335,7 @@ class Delta {
     ) => boolean | void,
     newline = '\n',
   ): void {
-    const iter = Op.iterator(this.ops);
+    const iter = new OpIterator(this.ops);
     let line = new Delta();
     let i = 0;
     while (iter.hasNext()) {
@@ -396,8 +401,8 @@ class Delta {
       return this.transformPosition(arg, priority);
     }
     const other: Delta = arg;
-    const thisIter = Op.iterator(this.ops);
-    const otherIter = Op.iterator(other.ops);
+    const thisIter = new OpIterator(this.ops);
+    const otherIter = new OpIterator(other.ops);
     const delta = new Delta();
     while (thisIter.hasNext() || otherIter.hasNext()) {
       if (
@@ -434,7 +439,7 @@ class Delta {
 
   transformPosition(index: number, priority = false): number {
     priority = !!priority;
-    const thisIter = Op.iterator(this.ops);
+    const thisIter = new OpIterator(this.ops);
     let offset = 0;
     while (thisIter.hasNext() && offset <= index) {
       const length = thisIter.peekLength();
@@ -452,4 +457,9 @@ class Delta {
   }
 }
 
-export = Delta;
+export default Delta;
+
+if (typeof module === 'object') {
+  module.exports = Delta;
+  module.exports.default = Delta;
+}
