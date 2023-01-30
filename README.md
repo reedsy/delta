@@ -1,4 +1,4 @@
-# Delta [![Build Status](https://github.com/quilljs/delta/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/quilljs/delta/actions?query=branch%3Amaster) [![Coverage Status](https://img.shields.io/coveralls/quilljs/delta.svg)](https://coveralls.io/r/quilljs/delta)
+# Delta [![Build Status](https://github.com/quilljs/delta/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/quilljs/delta/actions?query=branch%main) [![Coverage Status](https://img.shields.io/coveralls/quilljs/delta.svg)](https://coveralls.io/r/quilljs/delta)
 
 ## Reedsy: Why fork
 
