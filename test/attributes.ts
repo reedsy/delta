@@ -1,4 +1,4 @@
-var AttributeMap = require('../dist/Delta').AttributeMap;
+import AttributeMap from '../src/AttributeMap';
 
 describe('AttributeMap', () => {
   describe('compose()', () => {
