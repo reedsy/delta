@@ -1,4 +1,5 @@
-var Delta = require('../../dist/Delta');
+import Delta from '../../src/Delta';
+import Op from '../../src/Op';
 
 describe('transform()', () => {
   it('insert + insert', () => {
@@ -148,5 +149,41 @@ describe('transform()', () => {
     expect(a1.transform(b1, true)).toEqual(expected);
     expect(a1).toEqual(a2);
     expect(b1).toEqual(b2);
+  });
+
+  describe('custom embed handler', () => {
+    beforeEach(() => {
+      Delta.registerEmbed<Op[]>('delta', {
+        compose: (a, b) => new Delta(a).compose(new Delta(b)).ops,
+        transform: (a, b, priority) =>
+          new Delta(a).transform(new Delta(b), priority).ops,
+        invert: (a, b) => new Delta(a).invert(new Delta(b)).ops,
+      });
+    });
+
+    afterEach(() => {
+      Delta.unregisterEmbed('delta');
+    });
+
+    it('transform an embed change with number', () => {
+      const a = new Delta().retain(1);
+      const b = new Delta().retain({ delta: [{ insert: 'b' }] });
+      const expected = new Delta().retain({
+        delta: [{ insert: 'b' }],
+      });
+      expect(a.transform(b, true)).toEqual(expected);
+      expect(a.transform(b)).toEqual(expected);
+    });
+
+    it('transform an embed change', () => {
+      const a = new Delta().retain({ delta: [{ insert: 'a' }] });
+      const b = new Delta().retain({ delta: [{ insert: 'b' }] });
+      const expected1 = new Delta().retain({
+        delta: [{ retain: 1 }, { insert: 'b' }],
+      });
+      const expected2 = new Delta().retain({ delta: [{ insert: 'b' }] });
+      expect(a.transform(b, true)).toEqual(expected1);
+      expect(a.transform(b)).toEqual(expected2);
+    });
   });
 });

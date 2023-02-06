@@ -1,6 +1,6 @@
-import diff from 'fast-diff';
-import rfdc from 'rfdc';
-import isEqual from 'fast-deep-equal';
+import diff = require('fast-diff');
+import rfdc = require('rfdc');
+import isEqual = require('fast-deep-equal');
 import AttributeMap from './AttributeMap';
 import Op from './Op';
 import OpIterator from './OpIterator';
@@ -8,10 +8,52 @@ const cloneDeep = rfdc();
 
 const NULL_CHARACTER = String.fromCharCode(0); // Placeholder char for embed in diff()
 
+interface EmbedHandler<T> {
+  compose(a: T, b: T, keepNull: boolean): T;
+  invert(a: T, b: T): T;
+  transform(a: T, b: T, priority: boolean): T;
+}
+
+const getEmbedTypeAndData = (
+  a: Op['insert'] | Op['retain'],
+  b: Op['insert'],
+): [string, unknown, unknown] => {
+  if (typeof a !== 'object' || a === null) {
+    throw new Error(`cannot retain a ${typeof a}`);
+  }
+  if (typeof b !== 'object' || b === null) {
+    throw new Error(`cannot retain a ${typeof b}`);
+  }
+  const embedType = Object.keys(a)[0];
+  if (!embedType || embedType !== Object.keys(b)[0]) {
+    throw new Error(
+      `embed types not matched: ${embedType} != ${Object.keys(b)[0]}`,
+    );
+  }
+  return [embedType, a[embedType], b[embedType]];
+};
+
 class Delta {
   static Op = Op;
   static OpIterator = OpIterator;
   static AttributeMap = AttributeMap;
+  private static handlers: { [embedType: string]: EmbedHandler<unknown> } = {};
+
+  static registerEmbed<T>(embedType: string, handler: EmbedHandler<T>): void {
+    this.handlers[embedType] = handler;
+  }
+
+  static unregisterEmbed(embedType: string): void {
+    delete this.handlers[embedType];
+  }
+
+  private static getHandler(embedType: string): EmbedHandler<unknown> {
+    const handler = this.handlers[embedType];
+    if (!handler) {
+      throw new Error(`no handlers for embed type "${embedType}"`);
+    }
+    return handler;
+  }
 
   ops: Op[];
   constructor(ops?: Op[] | { ops: Op[] }) {
@@ -27,7 +69,7 @@ class Delta {
 
   insert(
     arg: string | Record<string, unknown>,
-    attributes?: AttributeMap,
+    attributes?: AttributeMap | null,
   ): this {
     const newOp: Op = {};
     if (typeof arg === 'string' && arg.length === 0) {
@@ -51,8 +93,11 @@ class Delta {
     return this.push({ delete: length });
   }
 
-  retain(length: number, attributes?: AttributeMap): this {
-    if (length <= 0) {
+  retain(
+    length: number | Record<string, unknown>,
+    attributes?: AttributeMap | null,
+  ): this {
+    if (typeof length === 'number' && length <= 0) {
       return this;
     }
     const newOp: Op = { retain: length };
@@ -120,7 +165,7 @@ class Delta {
 
   chop(): this {
     const lastOp = this.ops[this.ops.length - 1];
-    if (lastOp && lastOp.retain && !lastOp.attributes) {
+    if (lastOp && typeof lastOp.retain === 'number' && !lastOp.attributes) {
       this.ops.pop();
     }
     return this;
@@ -221,12 +266,33 @@ class Delta {
         const length = Math.min(thisIter.peekLength(), otherIter.peekLength());
         const thisOp = thisIter.next(length);
         const otherOp = otherIter.next(length);
-        if (typeof otherOp.retain === 'number') {
+        if (otherOp.retain) {
           const newOp: Op = {};
           if (typeof thisOp.retain === 'number') {
-            newOp.retain = length;
+            newOp.retain =
+              typeof otherOp.retain === 'number' ? length : otherOp.retain;
           } else {
-            newOp.insert = thisOp.insert;
+            if (typeof otherOp.retain === 'number') {
+              if (thisOp.retain == null) {
+                newOp.insert = thisOp.insert;
+              } else {
+                newOp.retain = thisOp.retain;
+              }
+            } else {
+              const action = thisOp.retain == null ? 'insert' : 'retain';
+              const [embedType, thisData, otherData] = getEmbedTypeAndData(
+                thisOp[action],
+                otherOp.retain,
+              );
+              const handler = Delta.getHandler(embedType);
+              newOp[action] = {
+                [embedType]: handler.compose(
+                  thisData,
+                  otherData,
+                  action === 'retain',
+                ),
+              };
+            }
           }
           // Preserve null when composing with a retain, otherwise remove it for inserts
           const attributes = AttributeMap.compose(
@@ -252,7 +318,8 @@ class Delta {
           // Insert + delete cancels out
         } else if (
           typeof otherOp.delete === 'number' &&
-          typeof thisOp.retain === 'number'
+          (typeof thisOp.retain === 'number' ||
+            (typeof thisOp.retain === 'object' && thisOp.retain !== null))
         ) {
           delta.push(otherOp);
         }
@@ -370,10 +437,10 @@ class Delta {
     this.reduce((baseIndex, op) => {
       if (op.insert) {
         inverted.delete(Op.length(op));
-      } else if (op.retain && op.attributes == null) {
+      } else if (typeof op.retain === 'number' && op.attributes == null) {
         inverted.retain(op.retain);
         return baseIndex + op.retain;
-      } else if (op.delete || (op.retain && op.attributes)) {
+      } else if (op.delete || typeof op.retain === 'number') {
         const length = (op.delete || op.retain) as number;
         const slice = base.slice(baseIndex, baseIndex + length);
         slice.forEach((baseOp) => {
@@ -387,6 +454,19 @@ class Delta {
           }
         });
         return baseIndex + length;
+      } else if (typeof op.retain === 'object' && op.retain !== null) {
+        const slice = base.slice(baseIndex, baseIndex + 1);
+        const baseOp = new OpIterator(slice.ops).next();
+        const [embedType, opData, baseOpData] = getEmbedTypeAndData(
+          op.retain,
+          baseOp.insert,
+        );
+        const handler = Delta.getHandler(embedType);
+        inverted.retain(
+          { [embedType]: handler.invert(opData, baseOpData) },
+          AttributeMap.invert(op.attributes, baseOp.attributes),
+        );
+        return baseIndex + 1;
       }
       return baseIndex;
     }, 0);
@@ -422,9 +502,36 @@ class Delta {
         } else if (otherOp.delete) {
           delta.push(otherOp);
         } else {
+          const thisData = thisOp.retain;
+          const otherData = otherOp.retain;
+          let transformedData: Op['retain'] =
+            typeof otherData === 'object' && otherData !== null
+              ? otherData
+              : length;
+          if (
+            typeof thisData === 'object' &&
+            thisData !== null &&
+            typeof otherData === 'object' &&
+            otherData !== null
+          ) {
+            const embedType = Object.keys(thisData)[0];
+            if (embedType === Object.keys(otherData)[0]) {
+              const handler = Delta.getHandler(embedType);
+              if (handler) {
+                transformedData = {
+                  [embedType]: handler.transform(
+                    thisData[embedType],
+                    otherData[embedType],
+                    priority,
+                  ),
+                };
+              }
+            }
+          }
+
           // We retain either their retain or insert
           delta.retain(
-            length,
+            transformedData,
             AttributeMap.transform(
               thisOp.attributes,
               otherOp.attributes,
@@ -458,6 +565,8 @@ class Delta {
 }
 
 export default Delta;
+
+export { Op, OpIterator, AttributeMap };
 
 if (typeof module === 'object') {
   module.exports = Delta;
