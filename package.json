@@ -1,13 +1,13 @@
 {
   "name": "@reedsy/quill-delta",
-  "version": "5.0.0-reedsy.2.0.0",
+  "version": "5.1.0-reedsy.2.1.0",
   "description": "Format for representing rich text documents and changes.",
   "author": "Jason Chen <jhchen7@gmail.com>",
   "homepage": "https://github.com/quilljs/delta",
   "main": "dist/Delta.js",
   "dependencies": {
     "fast-deep-equal": "^3.1.3",
-    "fast-diff": "1.2.0",
+    "fast-diff": "1.3.0",
     "rfdc": "^1.1.4"
   },
   "devDependencies": {
