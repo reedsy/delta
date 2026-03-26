@@ -9,7 +9,7 @@
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/Delta.d.mts",
+        "types": "./Delta.d.mts",
         "default": "./dist/Delta.js"
       },
       "require": {
@@ -42,12 +42,13 @@
   },
   "files": [
     "tsconfig.json",
+    "Delta.d.mts",
     "dist",
     "src"
   ],
   "license": "MIT",
   "scripts": {
-    "build": "tsc && node scripts/postbuild.js",
+    "build": "tsc",
     "prepare": "npm run build",
     "lint": "eslint 'src/**/*.ts'",
     "test": "jasmine --config=jasmine.json",
