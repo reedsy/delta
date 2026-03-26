@@ -8,9 +8,14 @@
   "types": "dist/Delta.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/Delta.d.ts",
-      "require": "./dist/index.js",
-      "default": "./dist/Delta.js"
+      "import": {
+        "types": "./dist/Delta.d.mts",
+        "default": "./dist/Delta.js"
+      },
+      "require": {
+        "types": "./dist/Delta.d.ts",
+        "default": "./dist/index.js"
+      }
     }
   },
   "dependencies": {
@@ -42,7 +47,7 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/postbuild.js",
     "prepare": "npm run build",
     "lint": "eslint 'src/**/*.ts'",
     "test": "jasmine --config=jasmine.json",
