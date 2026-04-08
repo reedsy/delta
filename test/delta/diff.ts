@@ -1,4 +1,4 @@
-import Delta from '../../src/Delta';
+import { Delta } from '../../src/Delta';
 
 describe('diff()', () => {
   it('insert', () => {

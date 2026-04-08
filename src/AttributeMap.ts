@@ -1,5 +1,5 @@
-import rfdc = require('rfdc');
-import isEqual = require('fast-deep-equal');
+import rfdc from 'rfdc';
+import isEqual from 'fast-deep-equal';
 const cloneDeep = rfdc();
 
 interface AttributeMap {
@@ -134,4 +134,4 @@ namespace AttributeMap {
   }
 }
 
-export default AttributeMap;
+export { AttributeMap };

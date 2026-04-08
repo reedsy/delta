@@ -1,9 +1,9 @@
-import diff = require('fast-diff');
-import rfdc = require('rfdc');
-import isEqual = require('fast-deep-equal');
-import AttributeMap from './AttributeMap';
-import Op from './Op';
-import OpIterator from './OpIterator';
+import diff from 'fast-diff';
+import rfdc from 'rfdc';
+import isEqual from 'fast-deep-equal';
+import { AttributeMap } from './AttributeMap';
+import { Op } from './Op';
+import { OpIterator } from './OpIterator';
 const cloneDeep = rfdc();
 
 const NULL_CHARACTER = String.fromCharCode(0); // Placeholder char for embed in diff()
@@ -564,11 +564,4 @@ class Delta {
   }
 }
 
-export default Delta;
-
-export { Op, OpIterator, AttributeMap };
-
-if (typeof module === 'object') {
-  module.exports = Delta;
-  module.exports.default = Delta;
-}
+export { Delta, Op, OpIterator, AttributeMap };
