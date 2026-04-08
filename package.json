@@ -52,7 +52,7 @@
     "build": "tsup",
     "prepare": "npm run build",
     "lint": "eslint 'src/**/*.ts'",
-    "test": "node --no-experimental-strip-types node_modules/.bin/jasmine --config=jasmine.json",
+    "test": "jasmine --config=jasmine.json",
     "test:coverage": "nyc npm run test",
     "test:coverage:report": "nyc report --reporter=lcov"
   },
