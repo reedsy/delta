@@ -1,9 +1,9 @@
-import diff = require('fast-diff');
-import rfdc = require('rfdc');
-import isEqual = require('fast-deep-equal');
-import { AttributeMap } from './AttributeMap';
-import { Op } from './Op';
-import { OpIterator } from './OpIterator';
+import diff from 'fast-diff';
+import rfdc from 'rfdc';
+import isEqual from 'fast-deep-equal';
+import { AttributeMap } from './AttributeMap.js';
+import { Op } from './Op.js';
+import { OpIterator } from './OpIterator.js';
 const cloneDeep = rfdc();
 
 const NULL_CHARACTER = String.fromCharCode(0); // Placeholder char for embed in diff()
