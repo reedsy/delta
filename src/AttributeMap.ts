@@ -1,5 +1,5 @@
-import rfdc from 'rfdc';
-import isEqual from 'fast-deep-equal';
+import rfdc = require('rfdc');
+import isEqual = require('fast-deep-equal');
 const cloneDeep = rfdc();
 
 interface AttributeMap {

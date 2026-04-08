@@ -1,6 +1,6 @@
-import diff from 'fast-diff';
-import rfdc from 'rfdc';
-import isEqual from 'fast-deep-equal';
+import diff = require('fast-diff');
+import rfdc = require('rfdc');
+import isEqual = require('fast-deep-equal');
 import { AttributeMap } from './AttributeMap';
 import { Op } from './Op';
 import { OpIterator } from './OpIterator';
