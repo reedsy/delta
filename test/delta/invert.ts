@@ -1,5 +1,5 @@
-import Delta from '../../src/Delta';
-import Op from '../../src/Op';
+import { Delta } from '../../src/Delta';
+import { Op } from '../../src/Op';
 
 describe('invert()', () => {
   it('insert', () => {

@@ -1,4 +1,4 @@
-import { Op } from '../src/Delta';
+import { Op } from '../src/index';
 
 describe('Op', () => {
   describe('length()', () => {

@@ -1,6 +1,6 @@
-import Op from './Op';
+import { Op } from './Op';
 
-export default class Iterator {
+export class OpIterator {
   ops: Op[];
   index: number;
   offset: number;
