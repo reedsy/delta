@@ -1,4 +1,4 @@
-import AttributeMap from './AttributeMap';
+import { AttributeMap } from './AttributeMap';
 
 interface Op {
   // only one property out of {insert, delete, retain} will be present
@@ -23,4 +23,4 @@ namespace Op {
   }
 }
 
-export default Op;
+export { Op };

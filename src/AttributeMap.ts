@@ -134,4 +134,4 @@ namespace AttributeMap {
   }
 }
 
-export default AttributeMap;
+export { AttributeMap };

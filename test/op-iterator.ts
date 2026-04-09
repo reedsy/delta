@@ -1,5 +1,5 @@
-import Delta from '../src/Delta';
-import OpIterator from '../src/OpIterator';
+import { Delta } from '../src/Delta';
+import { OpIterator } from '../src/OpIterator';
 
 describe('OpIterator', () => {
   const delta = new Delta()

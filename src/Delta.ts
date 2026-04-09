@@ -1,9 +1,9 @@
 import diff = require('fast-diff');
 import rfdc = require('rfdc');
 import isEqual = require('fast-deep-equal');
-import AttributeMap from './AttributeMap';
-import Op from './Op';
-import OpIterator from './OpIterator';
+import { AttributeMap } from './AttributeMap';
+import { Op } from './Op';
+import { OpIterator } from './OpIterator';
 const cloneDeep = rfdc();
 
 const NULL_CHARACTER = String.fromCharCode(0); // Placeholder char for embed in diff()
@@ -34,9 +34,6 @@ const getEmbedTypeAndData = (
 };
 
 class Delta {
-  static Op = Op;
-  static OpIterator = OpIterator;
-  static AttributeMap = AttributeMap;
   private static handlers: { [embedType: string]: EmbedHandler<unknown> } = {};
 
   static registerEmbed<T>(embedType: string, handler: EmbedHandler<T>): void {
@@ -564,11 +561,4 @@ class Delta {
   }
 }
 
-export default Delta;
-
-export { Op, OpIterator, AttributeMap };
-
-if (typeof module === 'object') {
-  module.exports = Delta;
-  module.exports.default = Delta;
-}
+export { Delta };
