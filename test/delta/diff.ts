@@ -1,4 +1,6 @@
+import isEqual = require('fast-deep-equal');
 import { Delta } from '../../src/Delta';
+import { Op } from '../../src/Op';
 
 describe('diff()', () => {
   it('insert', () => {
@@ -156,5 +158,93 @@ describe('diff()', () => {
     expect(() => {
       a.diff(b);
     }).toThrow(new Error('diff() called on non-document'));
+  });
+
+  describe('surrogate pairs', () => {
+    it('insert between astral characters', () => {
+      const a = new Delta().insert('x🌀');
+      const b = new Delta().insert('x🏆🌀');
+      const expected = new Delta().retain(1).insert('🏆');
+      expect(a.diff(b)).toEqual(expected);
+    });
+
+    it('delete an astral character', () => {
+      const a = new Delta().insert('x🌀🎉');
+      const b = new Delta().insert('x🎉');
+      const expected = new Delta().retain(1).delete(2);
+      expect(a.diff(b)).toEqual(expected);
+    });
+
+    it('attributed insert between astral characters', () => {
+      const a = new Delta().insert('x🌀');
+      const b = new Delta()
+        .insert('x')
+        .insert('🏆', { bold: true })
+        .insert('🌀');
+      const expected = new Delta().retain(1).insert('🏆', { bold: true });
+      expect(a.diff(b)).toEqual(expected);
+    });
+
+    it('keeps semantic cleanup when no pair is split', () => {
+      const a = new Delta().insert('🏆Badcat');
+      const b = new Delta().insert('🏆Gooddog');
+      const expected = new Delta().retain(2).insert('Gooddog').delete(6);
+      expect(a.diff(b)).toEqual(expected);
+    });
+
+    it('never splits a pair, for any pair of documents', () => {
+      const characters = ['a', 'b', 'x', ' ', '🏆', '🌀', '🎉', '👍🏾', '🇬🇧'];
+      const attributes = [null, { bold: true }, { italic: true }];
+      let seed = 20250904;
+      const random = (max: number): number => {
+        seed ^= seed << 13;
+        seed ^= seed >>> 17;
+        seed ^= seed << 5;
+        return Math.abs(seed) % max;
+      };
+      const document = (): Delta => {
+        const delta = new Delta();
+        for (let op = random(4) + 1; op > 0; op--) {
+          let text = '';
+          for (let index = random(4) + 1; index > 0; index--) {
+            text += characters[random(characters.length)];
+          }
+          const attribute = attributes[random(attributes.length)];
+          if (attribute) {
+            delta.insert(text, attribute);
+          } else {
+            delta.insert(text);
+          }
+        }
+        return delta.insert('\n');
+      };
+
+      // `\p{Cs}` only ever matches a surrogate that has lost its partner: a
+      // well-formed pair is a single non-Cs code point under `/u`
+      const splitsPair = (delta: Delta): boolean =>
+        delta.ops.some(
+          (op) => typeof op.insert === 'string' && /\p{Cs}/u.test(op.insert),
+        );
+
+      type Counterexample = { a: Op[]; b: Op[]; delta: Op[] };
+      let split: Counterexample | null = null;
+      let inequivalent: Counterexample | null = null;
+
+      for (let iteration = 0; iteration < 5000; iteration++) {
+        const a = document();
+        const b = document();
+        const delta = a.diff(b);
+        const counterexample = { a: a.ops, b: b.ops, delta: delta.ops };
+        if (!split && splitsPair(delta)) {
+          split = counterexample;
+        }
+        if (!inequivalent && !isEqual(a.compose(delta).ops, b.ops)) {
+          inequivalent = counterexample;
+        }
+      }
+
+      expect(split).toBeNull();
+      expect(inequivalent).toBeNull();
+    });
   });
 });
